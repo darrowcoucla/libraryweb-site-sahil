@@ -1,0 +1,22 @@
+.pane-bean-featured-content {
+  background: $content-background-gray;
+  margin: 0 0 1em;
+  padding: 12px;
+  .field--name-field-featured-thumbnail-image,
+  .field--name-field-featured-link {
+    display: table-cell;
+    vertical-align: middle;
+    img {
+      display: block;
+      margin-right: 10px;
+      max-width: 70px;
+    }
+    .field__item {
+      position: relative;
+    }
+    a {
+      @extend .more-link-triangle-after;
+      white-space: normal;
+    }
+  }
+}

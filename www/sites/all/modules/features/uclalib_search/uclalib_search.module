@@ -1,0 +1,142 @@
+<?php
+/**
+ * @file
+ * Code for the UCLALIB Search feature.
+ */
+
+include_once 'uclalib_search.features.inc';
+
+/**
+ * Implements hook_entity_property_info_alter().
+ *
+ * From: https://drupal.org/node/1480882
+ *
+ * We add an additional property to the locations that can be indexed by search_api.
+ * This property will be the position of the node in a given queue.
+ * Once the node is indexed it can be used in views to sort.
+ */
+function uclalib_search_entity_property_info_alter(&$info) {
+  $bundles = &$info['node']['bundles'];
+  $bundles['location']['properties']['queue_position'] = array(
+    'type' => 'integer',
+    'label' => 'Queue position',
+    'getter callback' => 'uclalib_search_queue_position',
+    'description' => t('Position in the nodequeue'),
+    'entity views field' => TRUE,
+  );
+}
+
+/**
+ * Implements hook_form_FORM_ID_alter() for FORM_ID().
+ */
+function uclalib_search_form_views_exposed_form_alter(&$form, &$form_state, $form_id) {
+  if ($form['#id'] == 'views-exposed-form-staff-directory-staff-directory-pane'
+    || $form['#id'] == 'views-exposed-form-news-search-news-search'
+    || $form['#id'] == 'views-exposed-form-location-search-panel-pane-1'
+  ) {
+    $form['search_api_views_fulltext']['#title'] = t('Search');
+    $form['search_api_views_fulltext']['#title_display'] = 'invisible';
+  }
+}
+
+/**
+ * Entity property getter callback: Returns the relevant nodequeue position for the queue.
+ */
+function uclalib_search_queue_position($entity, $options, $name, $entity_type, $info) {
+  $queue = nodequeue_load_queue_by_name('libraries_and_affiliates');
+  $subqueues = nodequeue_load_subqueues_by_queue($queue->qid);
+  $subqueue = reset($subqueues);
+
+  if ($pos = nodequeue_get_subqueue_position($subqueue->sqid, $entity->nid)) {
+    // Easier to reverse the queue ordering so that we can order in a way that NULL/0 comes last.
+    return -1 * (1+ $subqueue->count - $pos);
+  }
+}
+
+/**
+ * Implements hook_nodequeue_save_subqueue_order_alter().
+ *
+ * When the promoted locations nodequeue is saved, reindex all location nodes.
+ */
+function uclalib_search_nodequeue_save_subqueue_order_alter($sqid, $nodes) {
+  $queue = nodequeue_load_queue_by_name('libraries_and_affiliates');
+  $subqueues = nodequeue_load_subqueues_by_queue($queue->qid);
+  $subqueue = reset($subqueues);
+
+  if ($sqid == $subqueue->sqid) {
+    $nids = db_select('node', 'n')
+      ->condition('type', 'location')
+      ->fields('n', array('nid'))
+      ->execute()
+      ->fetchAllAssoc('nid');
+    $nids = array_keys($nids);
+
+    search_api_track_item_change('node', $nids);
+  }
+}
+
+/**
+ * Implements hook_facet_items_alter()
+ */
+function uclalib_search_facet_items_alter(&$build, &$settings) {
+  foreach ($build as $key => $values) {
+    if ($key == 'location') {
+      $build[$key]['#markup'] = t('Libraries Only');
+    }
+    if ($key == 'destination') {
+      unset($build[$key]);
+    }
+  }
+}
+
+/**
+ * Implements hook_search_api_alter_callback_info() to provide a staff alpha pager.
+ */
+function uclalib_search_search_api_alter_callback_info() {
+  $callbacks['uclalib_search_staff_index_fields'] = array(
+    'name' => t('Generate Staff custom index fields.'),
+    'description' => t('This is an Alter Callback implementation to add custom fields to Staff nodes.'),
+    'class' => 'UclalibSearchStaffIndexFields',
+  );
+
+  return $callbacks;
+}
+
+/**
+ * Search API data alteration callback to dynamically create staff index fields.
+ */
+class UclalibSearchStaffIndexFields extends SearchApiAbstractAlterCallback {
+  public function alterItems(array &$items) {
+
+    foreach ($items as $id => &$item) {
+
+      if ($item->type == 'staff_profile') {
+
+        // wrap the node for easier property access
+        $node_wrapper = entity_metadata_wrapper('node', $item);
+        // Populate dynamic index fields
+        if (isset($item->field_staff_last_name) && !empty($item->field_staff_last_name)) {
+          $name = $node_wrapper->field_staff_last_name->value();
+
+        // glossary field only allows A-Z letters
+        $upper = strtoupper($name);
+        $letter = substr($upper, 0, 1);
+        if (preg_match("/^[A-Z]$/", $letter)) {
+          $items[$id]->field_staff_glossary_index = $letter;
+        }
+      }
+    }
+  }
+}
+  public function propertyInfo() {
+    return array(
+
+     // alpha last name
+     'field_staff_glossary_index' => array(
+        'label' => t('Staff Alpha'),
+        'description' => t('This is a custom bundle type that takes the first letter of a staff members last name for an alpha pager.'),
+        'type' => 'string',
+      ),
+    );
+  }
+}

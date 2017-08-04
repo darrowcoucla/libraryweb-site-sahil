@@ -1,0 +1,12 @@
+name = UCLALIB Footer & Colophon
+description = Menu and bean configurations for site footer and colophon.
+core = 7.x
+package = UCLALIB
+dependencies[] = ctools
+dependencies[] = features
+dependencies[] = menu
+dependencies[] = uclalib_text_block_bean
+features[features_api][] = api:2
+features[menu_custom][] = menu-colophon-first
+features[menu_custom][] = menu-colophon-second
+features[menu_custom][] = menu-footer

@@ -1,0 +1,31 @@
+.pane-style-border-blue {
+  margin-bottom: 1em;
+  .pane-content {
+    border: 1px solid $border-color;
+    padding: 1em 1.5em;
+  }
+  .pane-title {
+    background: $ucla-blue;
+    margin: 0;
+    padding: 0.5em 15px;
+    &, a {
+      color: white;
+    }
+  }
+}
+
+.pane-title-inline-wrapper .pane-title {
+  display: inline-block;
+}
+
+.pane-title-align-left .pane-title {
+  text-align: left;
+}
+
+.pane-title-align-right .pane-title {
+  text-align: right;
+}
+
+.pane-title-align-center .pane-title {
+  text-align: center;
+}

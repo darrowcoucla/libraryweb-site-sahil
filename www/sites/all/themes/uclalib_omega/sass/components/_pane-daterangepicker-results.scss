@@ -1,0 +1,28 @@
+.pane-daterangepicker-results {
+  .view-filters {
+    margin-bottom: 2em;
+    .form-submit {
+      margin-top: 1.3em;
+    }
+  }
+  .views-row {
+    display: table;
+    margin-bottom: 2em;
+    .views-field-title {
+      font-size: 1.143em;
+    }
+    .views-field-nothing {
+      display: table-cell;
+      vertical-align: middle;
+      p {
+        margin: 6px 0 0;
+      }
+    }
+    .views-field-field-event-date-3,
+    .views-field-field-exhibition-end {
+      @extend .views-field-nothing;
+      padding-right: 12px;
+      text-align: center;
+    }
+  }
+}

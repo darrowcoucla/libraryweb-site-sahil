@@ -1,0 +1,33 @@
+
+html {
+  font-family: $ProximaNova;
+  font-size: 0.875em;
+  color: $text-color;
+}
+
+a {
+  @include link-colors($ucla-blue);
+  @include hover-link;
+  font-weight:bold;
+}
+
+.title-light {
+  h2 {
+    font-size: 2.143em;
+    font-weight: 100;
+    margin: 0.5em 0 0;
+  }
+  & + .panel-pane p {
+    margin-top: 0;
+  }
+}
+
+/* UCLA Library custom Iconfont */
+[class^="icon-"]:before, [class*=" icon-"]:before {
+  vertical-align: -17%;
+}
+
+.icon-copy-color:before,
+.icon-printer-color:before {
+  color: $ucla-yellow;
+}

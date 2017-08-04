@@ -1,0 +1,13 @@
+# UCLA-specific settings files - no credentials in repo
+sites/*/*.settings-db.php
+
+# Ignore paths that contain user-generated content.
+sites/*/files
+sites/*/private
+
+# Ignore robots.txt - we use site-specific files via symlink
+robots.txt
+
+# Ignore hidden swap files from "kate" editor
+*.kate-swp
+

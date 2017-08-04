@@ -1,0 +1,156 @@
+<?php
+
+/**
+ * Implements hook_enable().
+ */
+function uclalib_footer_settings_enable() {
+
+  // Ensure certain updates are always run when the feature is enabled.
+  uclalib_footer_settings_update_7001();
+  uclalib_footer_settings_update_7003();
+}
+
+/**
+ * Import Colophon text block & placeholder text.
+ */
+function uclalib_footer_settings_update_7001() {
+
+  // Ensure the required text block bean exists.
+  if (!module_exists('uclalib_text_block_bean')) {
+    module_enable(array('uclalib_text_block_bean'));
+  }
+  // Ensure the text block bean feature is in its default state.
+  features_revert_module('uclalib_text_block_bean');
+
+  // Create the text block.
+  $blocks['colophon-about'] = array(
+    'delta' => 'colophon-about',
+    'label' => 'About the UCLA Library',
+    'title' => '',
+    'type' => 'text_block',
+    'view_mode' => 'default',
+    'data' => array(),
+    'field_text_block' => array(
+      'und' => array(
+        '0' => array(
+          'value' => '<h2>About the <span>UCLA Library</span></h2>
+<p>The mission of the UCLA Library is to provide access to and delivery of information resources to UCLA students, faculty, and staff in support of the research and instructional mission of the university. The Library develops, organizes, and preserves collections for optimal use and provides links to remote information sources. The Library provides services, including instruction for information literacy and information management, to enable its users to fulfill their academic and intellectual needs. The Library provides resources and services to non-UCLA users to the extent possible.</p>
+<p>Relying on its highly skilled staff, the Library encourages innovation, capitalizes on appropriate technologies, forges effective partnerships and aggressively promotes excellence.</p>',
+          'format' => 'full_html',
+        ),
+      ),
+    ),
+  );
+
+  // Create the block only if the delta doesn't already exist.
+  foreach($blocks as $key => $block) {
+    if (!bean_load_delta($block['delta'])) {
+      $bean = bean_create($block);
+      if (bean_save($bean)) {
+        drupal_set_message($block['label'] . ' block was created.');
+      } else {
+        drupal_set_message($block['label'] . ' block could not be saved!', 'warning');
+      }
+    }
+  }
+}
+
+/**
+ * Delete old footer menus (they were renamed for colophon).
+ */
+function uclalib_footer_settings_update_7002() {
+  menu_delete(array('menu_name' => 'menu-footer-first'));
+  menu_delete(array('menu_name' => 'menu-footer-second'));
+}
+
+/**
+ * Add copyright to Footer.
+ */
+function uclalib_footer_settings_update_7003() {
+
+  // Ensure the required special menu items module is enabled.
+  if (!module_exists('special_menu_items')) {
+    module_enable(array('special_menu_items'));
+  }
+
+  $link = array(
+    'link_title' => 'Copyright © 2014 UCLA',
+    'link_path' => '<nolink>',  // Provided by special menu items module.
+    'router_path' => '<nolink>',
+    'menu_name' => 'menu-footer',
+    'weight' => 0,
+    'expanded' => 0,
+    'options' => array(
+      'attributes' => array(
+        'title' => '',
+        'class' => 'footer-copyright',
+      ),
+    ),
+    'module' => 'uclalib_footer_settings',
+  );
+
+  // Save the menu link if it doesn't already exist.
+  $exists = db_query("SELECT mlid
+    FROM {menu_links}
+    WHERE menu_name=:menu_name
+    AND link_title LIKE :link_title
+    AND link_path=:link_path", array(
+    ':menu_name' => $link['menu_name'],
+    ':link_title' => '%Copyright%',
+    ':link_path' => $link['link_path'])
+  )->fetchField();
+
+  if(!$exists) {
+    menu_link_save($link);
+    menu_cache_clear_all();
+    drupal_set_message('Copyright message was added to the site footer.');
+  }
+  else {
+    drupal_set_message('Copyright exists: '. $exists);
+  }
+}
+
+/**
+ * Change Copyright text in footer.  This can't be done (at present)
+ * via menu UI because the original definition in update_7003() set
+ * options->attributes->class as a string instead of an array,
+ * which causes white screen PHP fatal error in Drupal when trying to edit.
+ */
+function uclalib_footer_settings_update_7004() {
+
+  // Ensure the required special menu items module is enabled.
+  if (!module_exists('special_menu_items')) {
+    module_enable(array('special_menu_items'));
+  }
+
+  // Get id of existing link, created in uclalib_footer_settings_update_7003()
+  $old_mlid = db_query("SELECT mlid
+    FROM {menu_links}
+    WHERE menu_name = 'menu-footer'
+    AND link_title LIKE '%Copyright%2014%UCLA%'"
+  )->fetchField();
+
+  // Hacky workaround to get Unicode U+A9 copyright symbol in PHP string.
+  // Clumsy, but better than trying to edit in vi...
+  $copyright_symbol = json_decode('"'. '\u00A9' .'"');
+
+  $link = array(
+    'link_title' => '2014 ' . $copyright_symbol . ' UC Regents', 
+    'link_path' => '<nolink>',  // Provided by special menu items module.
+    'router_path' => '<nolink>',
+    'menu_name' => 'menu-footer',
+    'weight' => 0,
+    'expanded' => 0,
+    'options' => array(
+      'attributes' => array(
+        'title' => '',
+        'class' => array('footer-copyright'),
+      ),
+    ),
+    'module' => 'uclalib_footer_settings',
+    'mlid' => $old_mlid,
+  );
+  
+  menu_link_save($link);
+  menu_cache_clear_all();
+}

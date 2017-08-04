@@ -1,0 +1,32 @@
+.pane-ask-a-librarian {
+  border-radius: 3px;
+  background: $ucla-accent_color;
+  padding: .4em .5em .6em;
+  position: relative;
+  p {
+    margin: 0;
+    padding: 0;
+  }
+  a {
+    @include link-colors($ucla-dark-gray);
+    // text-shadow: 0 .04em .02em #8d6e2d;
+    &, &:hover, &:active, &:focus {
+      text-decoration: none;
+      font-weight: 100;
+    }
+    span {
+      font-size: 16px;
+    }
+  }
+}
+.pane-ask-a-librarian:before {
+  content: " ";
+  position: absolute;
+  top: 100%;
+  left: 1.5em;
+  width: 0;
+  height: 0;
+  border-style: solid;
+  border-color: transparent $ucla-accent_color transparent;
+  border-width: 0 .7em .7em 0;
+}

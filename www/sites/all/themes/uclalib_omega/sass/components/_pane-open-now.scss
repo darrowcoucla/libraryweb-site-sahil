@@ -1,0 +1,21 @@
+.pane-open-now {
+  .location-open-now,
+  .location-closed {
+    display: block;
+    padding: 22px 28px;
+    font-style: italic;
+    font-size: 14px;
+    font-weight: bold;
+    background: $ucla-accent_color;
+
+    @media #{$palm-lap-only} {
+      padding: 12px 5%;
+      position: relative;
+    }
+  }
+
+  @media #{$palm-lap-only} {
+    padding: 0 !important;
+    border-bottom: 1px solid #fff !important;
+  }
+}

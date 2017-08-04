@@ -1,0 +1,50 @@
+.pane-bean-quick-find {
+  h2 {
+    padding: 0 0.5em 0 2.5em;
+    font-size: 1em;
+    font-weight: bold;
+  }
+  .pane-content {
+    padding: 1em 0.5em 1em 2.5em;
+    font-size: 14px;
+    font-weight: 100;
+  }
+  .views-row {
+    margin: 10px 0;
+  }
+  .views-field-name,
+  .views-field-field-term-icon {
+    display: inline;
+    vertical-align: middle;
+  }
+  .views-field-name {
+    a {
+      line-height: 32px;
+      vertical-align: middle;
+    }
+  }
+  .icon {
+    vertical-align: middle;
+    font-size: 32px;
+    line-height: 32px;
+    margin-right: 4px;
+  }
+  .icon:before {
+    vertical-align: baseline;
+  }
+  a:hover .icon,
+  a:hover .icon:before {
+    text-decoration: none;
+  }
+}
+
+.pane-bean-quick-find.pane-style-border-blue {
+  .views-field-name a {
+    @extend .more-link-triangle-after;
+    color: $ucla-blue;
+    font-size: 15px;
+    &:after {
+      margin-top: 12px;
+    }
+  }
+}

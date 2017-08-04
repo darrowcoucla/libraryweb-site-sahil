@@ -1,0 +1,72 @@
+.pane-location-destinations-panel-pane-1 {
+  .view-location-destinations > .view-content {
+    & > .views-row {
+      border-bottom: 1px solid $border-color;
+      margin-bottom: 20px;
+      padding-bottom: 10px;
+      font-weight: 400;
+      .views-field-field-destination-room-number,
+      .views-field-field-destination-phone,
+      .views-field-field-destination-email {
+        display: inline-block;
+        margin-right: 24px;
+      }
+      .views-field-field-destination-room-number {
+        font-size: 1em;
+      }
+      .icon-telephone,
+      .icon-email {
+        font-size: 0.875em;
+        margin: 10px 0;
+      }
+      .icon-telephone:before,
+      .icon-email:before {
+        float: left;
+        font-size: 1.143em;
+        margin-right: 3px;
+      }
+      .destination-icons-horiz {
+        margin-bottom: 0.9em;
+      }
+    }
+    & > .views-row-last {
+      border-bottom: none;
+      margin-bottom: 0;
+      padding-bottom: 0;
+    }
+    .views-field-opening-hours-week {
+      margin-top: 12px;
+    }
+  }
+}
+
+.location-about {
+  border-bottom: 1px solid $border-color;
+  margin-bottom: 15px;
+  padding-bottom: 5px;
+  h2 {
+    font-size: 1.000em;
+    font-weight: bold;
+    margin-bottom: 0;
+  }
+  p {
+    margin-top: 0;
+  }
+  & + .pane-opening-hours-table {
+    h2 {
+      font-size: 1.000em;
+      font-weight: bold;
+      margin-bottom: 8px;
+    }
+    table {
+      width: 99.9%;
+      td, th {
+        width: 100%;
+      }
+    }
+  }
+}
+
+.schedule-appointment p {
+  margin-top: 0;
+}

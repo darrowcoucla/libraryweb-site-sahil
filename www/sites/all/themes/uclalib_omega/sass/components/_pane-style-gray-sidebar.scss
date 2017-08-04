@@ -1,0 +1,38 @@
+
+// Gray sidebar column uses the faux-column background solution
+// by Nicholas Gallagher.
+.gray-sidebar-left {
+
+  @media #{$desk-only} {
+    // Add padding and a background color. If any panes need to be
+    // flush left or right, just use negative margines.
+    .l-region--sidebar-left {
+      padding-left: 25px;
+      padding-right: 25px;
+      &:before {
+        background: $ucla-gray;
+      }
+    }
+  }
+}
+
+// This body class will remove the gray left sidebar used by default, and reset
+// the padding back to the original values.
+// Use it on specific panel pages.
+.no-gray-sidebar-left {
+  .l-region--sidebar-left {
+    padding-left: 0;
+    padding-right: 20px;
+    &:before {
+      background: transparent;
+    }
+  }
+}
+
+.panel-sidebar-left,
+.panel-grid-sidebar-left,
+.panel-sidebar-left-golden,
+.panel-sidebar-left-right,
+.panel-using-library {
+  @extend .gray-sidebar-left;
+}

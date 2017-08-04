@@ -1,0 +1,227 @@
+<?php
+/**
+ * @file
+ * Code for the UCLALIB Upcoming Events feature.
+ */
+
+include_once 'uclalib_upcoming_events.features.inc';
+
+/**
+ * Implements hook_form_alter
+ * Override view pane edit form (input on pane config)
+ * Based on code from: https://maslow.snipt.net/drupal-7-override-view-pane-edit-form-input-on-pane-config/
+ */
+function uclalib_upcoming_events_form_alter(&$form, $form_state, $form_id) {
+  if (isset($form_state['pane'])) {
+    if (in_array($form_state['pane']->subtype, array("recent_news_highlight-panel_pane_1", "recent_news_highlight-panel_pane_2"))) {
+      // filtered_entities is the view name, block_input_category is the display name
+
+      // get News Categories vocabulary
+      $form["arguments"]["field_news_categories_tid"]["#type"] = "select";
+      $form["arguments"]["field_news_categories_tid"]["#multiple"] = TRUE;
+      $form["arguments"]["field_news_categories_tid"]["#options"] = _uclalib_upcoming_events_taxonomy_select('news_categories', 0, 1);
+      $form["arguments"]["field_news_categories_tid"]["#default_value"] = explode('+', $form["arguments"]["field_news_categories_tid"]["#default_value"]);
+
+      // get Staff Subject Areas vocabulary
+      $form["arguments"]["field_staff_subject_areas_tid"]["#type"] = "select";
+      $form["arguments"]["field_staff_subject_areas_tid"]["#multiple"] = TRUE;
+      $form["arguments"]["field_staff_subject_areas_tid"]["#options"] = _uclalib_upcoming_events_taxonomy_select('staff_subject_areas', 0, 1);
+      $form["arguments"]["field_staff_subject_areas_tid"]["#default_value"] = explode('+', $form["arguments"]["field_staff_subject_areas_tid"]["#default_value"]);
+
+      // Location.
+      $form["arguments"]["field_news_location_target_id"]["#type"] = "select";
+      $form["arguments"]["field_news_location_target_id"]["#options"] = uclalib_upcoming_events_content_type_select($output);
+
+      $form['#validate'][] = 'uclalib_upcoming_events_news_widget_validate';
+    }
+  }
+}
+
+/**
+ * Custom validation handler for news highlight.
+ */
+function uclalib_upcoming_events_news_widget_validate($form, &$form_state) {
+  $form_state['values']['arguments']['field_news_categories_tid'] = implode('+', $form_state['values']['arguments']['field_news_categories_tid']);
+  $form_state['values']['arguments']['field_staff_subject_areas_tid'] = implode('+', $form_state['values']['arguments']['field_staff_subject_areas_tid']);
+}
+
+/**
+ * Gets terms for given vocabulary
+ * The first argument (3) is the vocabulary id.
+ * You can find it in the taxonomy_vocabulary table
+ * The second argument is the depth
+ */
+function _uclalib_upcoming_events_taxonomy_select($machine_name, $parent = 0, $depth = NULL) {
+  $vocab = taxonomy_vocabulary_machine_name_load($machine_name);
+  $terms = taxonomy_get_tree($vocab->vid, $parent, $depth);
+  $output = array('all' => '(All Categories)');
+  foreach ($terms as $data) {
+    $output[$data->tid] = $data->name;
+  }
+  return $output;
+}
+
+
+function uclalib_upcoming_events_content_type_select($node_type) {
+  $query = new EntityFieldQuery();
+  $query->entityCondition('entity_type', 'node')
+    ->entityCondition('bundle', 'location')
+    ->propertyCondition('status', 1);
+  $result = $query->execute();
+  if (isset($result['node'])) {
+    $location_nids = array_keys($result['node']);
+    $location_items = entity_load('node', $location_nids);
+  }
+
+  $output = array('all' => '(All Locations)');
+  foreach ($location_items as $data) {
+    $output[$data->nid] = $data->title;
+  }
+
+  return $output;
+}
+/**
+ * Implements hook_field_formatter_info().
+ */
+function uclalib_upcoming_events_field_formatter_info() {
+  $return = array();
+
+  $return['uclablib_event_date_block'] = array(
+    'label' => t('UCLALIB Event Date Block Formatter'),
+      'field types' => array('date', 'datestamp', 'datetime'),
+  );
+
+  return $return;
+}
+
+/**
+ * Implements hook_field_formatter_view().
+ */
+function uclalib_upcoming_events_field_formatter_view($entity_type, $entity, $field, $instance, $langcode, &$items, $display) {
+  $element = array();
+  switch ($display['type']) {
+    case 'uclablib_event_date_block':
+      $local_tz = 0;
+
+      foreach ($items as $delta => $item) {
+        $date_item = date_formatter_process('format_interval', $entity_type, $entity, $field, $instance, $langcode, $item,     $display);
+        if (empty($item['value2']) || $item['value'] == $item['value2']) {
+          $date = strtotime($date_item['value']['formatted_iso']);
+          $tz = $date_item['value']['local']['timezone'];
+
+          $month = format_date($date, 'custom', 'M', $tz);
+          $day = format_date($date, 'custom', 'j', $tz);
+          $time = format_date($date, 'custom', 'D', $tz);
+          if ($local_tz) {
+            $tz = 'LT';
+          }
+          else {
+            $tz = format_date($date, 'custom', 'T', $tz);
+          }
+
+          $date_str = '<div class="cal-month">' . strtoupper($month) . '</div>';
+          $date_str .= '<div class="cal-day">' . $day . '</div>';
+          $date_str .= '<div class="cal-time">' . $time . '</div>';
+
+
+          $output = '<div class="cal-date">' . $date_str . '</div>';
+
+          $element[$delta] = array('#markup' => $output);
+        }
+        else {
+          $date1 = strtotime($date_item['value']['formatted_iso']);
+          $date2 = strtotime($date_item['value2']['formatted_iso']);
+          $tz_1 = $date_item['value']['local']['timezone'];
+          $tz_2 = $date_item['value2']['local']['timezone'];
+
+          $month_1 = format_date($date1, 'custom', 'M', $tz_1);
+          $day_1 = format_date($date1, 'custom', 'j', $tz_1);
+          $time_1 = format_date($date1, 'custom', 'g:i a', $tz_1);
+          $tz_1 = format_date($date1, 'custom', 'T', $tz_1);
+
+          $month_2 = format_date($date2, 'custom', 'M', $tz_2);
+          $day_2 = format_date($date2, 'custom', 'j', $tz_2);
+          $time_2 = format_date($date2, 'custom', 'g:i a', $tz_2);
+          $tz_2 = format_date($date2, 'custom', 'T', $tz_2);
+
+          if ($local_tz) {
+            $tz_1 = $tz_2 = 'LT';
+          }
+
+          $date_str_1 = '<div class="cal-month">' . strtoupper($month_1) . '</div>';
+          $date_str_1 .= '<div class="cal-day">' . $day_1 . '</div>';
+          $date_str_2 = '<div class="cal-month">' . strtoupper($month_2) . '</div>';
+          $date_str_2 .= '<div class="cal-day">' . $day_2 . '</div>';
+
+          if ($time_1 != '12:00 am') {
+            $date_str_1 .= '<span class="cal-time">' . $time_1 . '</span>';
+            $date_str_1 .= ' <span class="cal-tz">' . $tz_1 . '</span>';
+          }
+
+          if ($time_2 != '12:00 am') {
+            $date_str_2 .= '<span class="cal-time">' . $time_2 . '</span>';
+            $date_str_2 .= ' <span class="cal-tz">' . $tz_2 . '</span>';
+          }
+
+          $output =
+            '<div class="cal-date cal-date-range">' .
+              '<span class="date-range-start">' . $date_str_1 . '</span>' .
+              '<span class="date-range-separator">' . t('to') . '</span>' .
+              '<span class="date-range-end">' . $date_str_2 . '</span>' .
+            '</div>';
+
+          $element[$delta] = array('#markup' => $output);
+        }
+      }
+      break;
+
+  }
+
+  return $element;
+}
+
+
+/**
+ * Implements hook_cron().
+ *
+ * Remove all events with past dates from all beans of type 'upcoming events'.
+ *
+ */
+function uclalib_upcoming_events_cron() {
+  $results = db_select('bean', 'b')
+    ->condition('type', 'upcoming_events')
+    ->fields('b', array('bid'))
+    ->execute()
+    ->fetchAllAssoc('bid');
+
+  foreach ($results as $bid => $result) {
+    $bean = bean_load($bid);
+
+    $now = date_create()->format('Y-m-d h:i:s');
+
+    // Calculate what events are past.
+    if (isset($bean->field_upcoming_events_events[LANGUAGE_NONE]) && is_array($bean->field_upcoming_events_events[LANGUAGE_NONE])) {
+      $remove_deltas = array();
+      foreach ($bean->field_upcoming_events_events[LANGUAGE_NONE] as $delta => $value) {
+        if (isset($value['target_id']) && ($event_node = node_load($value['target_id']))) {
+
+          if (isset($event_node->field_event_date[LANGUAGE_NONE][0]['value'])) {
+            if ($event_node->field_event_date[LANGUAGE_NONE][0]['value'] < $now) {
+              $remove_deltas[] = $delta;
+            }
+          }
+        }
+      }
+
+      foreach ($remove_deltas as $delta) {
+        // Remove pass event.
+        unset($bean->field_upcoming_events_events[LANGUAGE_NONE][$delta]);
+        // Reset deltas.
+        $bean->field_upcoming_events_events[LANGUAGE_NONE] = array_values($bean->field_upcoming_events_events[LANGUAGE_NONE]);
+      }
+
+      // Save the bean.
+      bean_save($bean);
+    }
+  }
+}

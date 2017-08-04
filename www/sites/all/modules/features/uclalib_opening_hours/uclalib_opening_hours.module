@@ -1,0 +1,329 @@
+<?php
+
+/**
+ * @file
+ * Main code file for uclalib_opening_hours module.
+ */
+
+include_once 'uclalib_opening_hours.features.inc';
+
+/**
+ * Implements hook_menu().
+ */
+function uclalib_opening_hours_menu() {
+  $items['ajax/opening_hours_table/%/%'] = array(
+    'page callback' => 'uclalib_opening_hours_render_hours_table',
+    'page arguments' => array(2, 3),
+    'type' => MENU_CALLBACK,
+    'access arguments' => array('access content'),
+  );
+
+  $items['ajax/todays_hours_master'] = array(
+    'title' => 'Todays Hours Master',
+    'page callback' => 'uclalib_opening_hours_generate_master',
+    'type' => MENU_CALLBACK,
+    'access callback' => TRUE,
+  );
+
+  return $items;
+}
+
+/**
+ * Implements hook_ctools_plugin_directory().
+ */
+function uclalib_opening_hours_ctools_plugin_directory($owner, $plugin_type) {
+  switch ("$owner:$plugin_type") {
+    case 'ctools:content_types':
+      return "plugins/$owner/$plugin_type";
+  }
+
+  return NULL;
+}
+
+/**
+ * Abbreviate a time string to the required format.
+ *
+ * @param $time
+ *   The time as 'HH:MM:SS';
+ * @return string
+ *   The time with the abbreviated form. Ex: 2p, 12:30a
+ */
+function _uclalib_opening_hours_short_time($time) {
+  $matches = array();
+
+  if (preg_match('/^([0-9]{2}):([0-9]{2}):([0-9]{2})$/', $time, $matches)) {
+    $hour = $matches[1];
+    $minute = $matches[2];
+
+    $ap = 'a';
+    if ($hour > 0) {
+      $hour = ltrim($hour, '0');
+      if ($hour >= 12) {
+        if ($hour > 12) {
+          $hour = $hour - 12;
+        }
+        $ap = 'p';
+      }
+    }
+    else {
+      // Midnight is special in 12hour time: data is 00, output is 12a
+      $hour = 12;
+    }
+
+    $time = $hour;
+
+    if ($minute != '00') {
+      $time .= ':' . $minute;
+    }
+
+    $time .= $ap;
+  }
+
+  return $time;
+}
+
+/**
+ * Get the short custom text for days of the week.
+ *
+ * @param $dow
+ * @return mixed
+ */
+function _uclalib_opening_hours_short_day($dow) {
+  $strs = array(
+    'Su',
+    'M',
+    'Tu',
+    'W',
+    'Th',
+    'F',
+    'Sa',
+  );
+
+  if (isset($strs[$dow])) {
+    return $strs[$dow];
+  }
+}
+
+/**
+ * Generate hours table header.
+ */
+function uclalib_opening_hours_generate_table_header($day, $nid) {
+  // Create range text.
+  $prev_week = clone($day);
+  $interval = DateInterval::createFromDateString('7 days');
+  $prev_week->sub($interval);
+  $week_str = '<a nid="' . $nid . '" date="' . $prev_week->format('d-m-Y') . '" class="opening-hours-link previous-week" href="#" title="Previous week">‹</a>';
+
+  $end_day = clone($day);
+  $interval = DateInterval::createFromDateString('6 days');
+  $end_day->add($interval);
+  $start_month = $day->format('M');
+  $end_month = $end_day->format('M');
+  if ($start_month == $end_month) {
+    $week_str .= $day->format('M') . ' ' . $day->format('j') . '-';
+    $week_str .= $end_day->format('j');
+  }
+  else {
+    $week_str .= $day->format('M') . ' ' . $day->format('j') . ' - ';
+    $week_str .= $end_day->format('M') . ' ' . $end_day->format('j');
+  }
+
+  // Create an interval of 1 day to add to the date for each week day.
+  $interval = DateInterval::createFromDateString('1 day');
+  $end_day->add($interval);
+  $week_str .= '<a nid="' . $nid . '" date="' . $end_day->format('d-m-Y') . '" class="opening-hours-link next-week" href="#" title="Next week">›</a>';
+
+  $start_day = clone($day);
+  $header = array(array('data' => $week_str,'class' => array('week-selector')));
+  for ($i = 0; $i < 7; $i++) {
+    $day_str = _uclalib_opening_hours_short_day($start_day->format('w'));
+    $header_cell = array(
+      'data' => $day_str . ' ' . $start_day->format('d'),
+      'class' => array(drupal_html_class('day-' . $start_day->format('D'))),
+    );
+
+    // If current day add a class.
+    if ($start_day->format('d') == date_create()->format('d')) {
+      $header_cell['class'][] = 'current-day';
+    }
+
+    $header[] = $header_cell;
+
+    // Add 1 day.
+    $start_day->add($interval);
+  }
+
+  return $header;
+}
+
+function uclalib_opening_hours_generate_table_rows($this_nid, $nodes, $day) {
+  $rows = array();
+
+  // Create an interval of 1 day to add to the date for each week day.
+  $interval = DateInterval::createFromDateString('1 day');
+
+  foreach ($nodes as $nid => $title) {
+    $this_day = clone($day);
+    // Add the title to the first column.
+    // Link destinations (all titles except the first) to their respective pages.
+    if ($this_nid != $nid) {
+      $url = url('node/' . $nid);
+      $title = "<a href='$url'>$title</a>";
+    }
+    $row = array(array('data' => $title, 'class' => array('title')));
+
+    $blocked_days = variable_get('opening_hours_blocked_days', array());
+    // Fetch opening hours for each day.
+    for ($i = 0; $i < 7; $i++) {
+      $date = $this_day->format('Y-m-d');
+      if (array_search($date, $blocked_days) !== FALSE) {
+        $start_time = NULL;
+        $end_time = NULL;
+      }
+      else {
+        $oh = db_select('opening_hours', 'oh')
+          ->fields('oh', array('start_time', 'end_time'))
+          ->condition('nid', $nid)
+          ->condition('date', $date)
+          ->execute()
+          ->fetchAssoc();
+
+        $start_time = _uclalib_opening_hours_short_time($oh['start_time']);
+        $end_time = _uclalib_opening_hours_short_time($oh['end_time']);
+      }
+      $row_data = _uclalib_opening_hours_combine_start_end_times($start_time, $end_time);
+      $row_cell = array(
+        'data' => $row_data,
+      );
+
+      // data-label for responsive tables.
+      $short_day_str = _uclalib_opening_hours_short_day($this_day->format('w'));
+      $row_cell['data-label'] = $short_day_str . ' ' . $this_day->format('d');
+
+      // If current day add a class.
+      if ($this_day->format('dmY') == date_create()->format('dmY')) {
+        $row_cell['class'][] = 'current-day';
+      }
+
+      $row[] = $row_cell;
+
+      // Add one day.
+      $this_day->add($interval);
+    }
+    $rows[] = $row;
+  }
+
+  return $rows;
+}
+
+function uclalib_opening_hours_generate_table($node, $start = NULL) {
+  // Generate starting date.
+  if ($start) {
+    $day = date_create($start);
+  }
+  else {
+    // Default to this week, defined as Monday - Sunday.
+    // Work around PHP bug/behavior where "this week" jumps to *next* Monday, on Sundays.
+    // See https://bugs.php.net/bug.php?id=63740
+    $day = date_create(); // now
+    // Set $day to last Monday, from tomorrow's point of view.
+    $day->setTimestamp(strtotime('last monday', strtotime('tomorrow')));
+  }
+
+  // Generate a header with the days of the week.
+  $header = uclalib_opening_hours_generate_table_header($day, $node->nid);
+
+  // Check for alternate name.
+  $title = isset($node->field_location_oh_name[LANGUAGE_NONE][0]['value']) ?
+    $node->field_location_oh_name[LANGUAGE_NONE][0]['value'] : $node->title;
+
+  // List of nodes that will be displayed. By default the passed node.
+  $nodes = array(
+    $node->nid => check_plain($title),
+  );
+
+  if (isset($node->field_location_destinations[LANGUAGE_NONE]) && is_array($node->field_location_destinations[LANGUAGE_NONE])) {
+    foreach ($node->field_location_destinations[LANGUAGE_NONE] as $value) {
+      if (isset($value['target_id'])) {
+        // @todo: avoid node_load.
+        $dest_node = node_load($value['target_id']);
+
+        $title = isset($dest_node->field_destination_oh_name[LANGUAGE_NONE][0]['value']) ?
+          $dest_node->field_destination_oh_name[LANGUAGE_NONE][0]['value'] : $dest_node->title;
+
+        // Default is to show hours, but if this destination is specifically
+        // configured not to show them, don't add it.
+        if (!isset($dest_node->field_display_on_hours_page[LANGUAGE_NONE]) ||
+            (isset($dest_node->field_display_on_hours_page[LANGUAGE_NONE])
+             && count($dest_node->field_display_on_hours_page[LANGUAGE_NONE])
+             && $dest_node->field_display_on_hours_page[LANGUAGE_NONE][0]['value'] == 1)
+        ) {
+          $nodes[$dest_node->nid] = check_plain($title);
+        }
+      }
+    }
+  }
+
+  // Pass the current node id as we treat it differently from other nodes when making table rows
+  $this_nid = $node->nid;
+  $rows = uclalib_opening_hours_generate_table_rows($this_nid, $nodes, $day);
+
+  $output = theme('table', array(
+    'header' => $header,
+    'rows' => $rows,
+    'attributes' => array('class' => array('opening-hours-week')),
+  ));
+
+  return $output;
+}
+
+/**
+ * AJAX callback to render hours table.
+ */
+function uclalib_opening_hours_render_hours_table($nid, $start) {
+  if ($node = node_load($nid)) {
+    $content = uclalib_opening_hours_generate_table($node, $start);
+    print $content;
+  }
+  drupal_exit();
+}
+
+/**
+ * Format combined start/end times for display.
+ * Handle special cases:
+ * * 23:45 - 23:45 (formatted as 11:45p) = closed
+ * * 00:00 - 00:00 (formatted as 12a)    = 24 hours
+ * * no data (empty)                     = nothing
+ */
+function _uclalib_opening_hours_combine_start_end_times($start_time, $end_time) {
+  if ($start_time == '11:45p' && $end_time == $start_time) {
+    $row_data = 'closed';
+  }
+  elseif ($start_time == '12a' && $end_time == $start_time) {
+    $row_data = '24 hours';
+  }
+  elseif (empty($start_time) && empty($end_time)) {
+    $row_data = '';
+  }
+  else {
+    $row_data = $start_time . '-' . $end_time;
+  }
+
+  return $row_data;
+}
+
+/**
+ * Callback for /ajax/todays_hours_master
+ */
+function uclalib_opening_hours_generate_master() {
+  $view = views_get_view('todays_hours');
+  $view->set_display('default');
+  $view->pre_execute();
+  $view->execute('default');
+  $content = $view->preview('default');
+
+  print $content;
+  drupal_page_is_cacheable(FALSE);
+  drupal_page_footer();
+  exit;
+}

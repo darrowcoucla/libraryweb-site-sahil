@@ -1,0 +1,17 @@
+
+.pane-style-background-gray {
+  background: $content-background-gray;
+  padding: 22px 15px;
+  margin: 0 0 1em;
+  p {
+    margin: 0;
+  }
+  p + p {
+    margin-top: 15px;
+  }
+  .pane-title {
+    margin: 0 0 10px;
+    font-weight: bold;
+    font-size: 16px;
+  }
+}

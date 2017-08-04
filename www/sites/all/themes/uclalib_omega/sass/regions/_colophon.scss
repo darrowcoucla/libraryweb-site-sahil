@@ -1,0 +1,49 @@
+.l-colophon-wrapper {
+  background: $colophon-bg-color;
+  color: $colophon-text-color;
+  padding: 50px 0;
+}
+.l-colophon {
+  font-size: 12px;
+  a, a:visited {
+    color: $colophon-link-color;
+    font-weight: bold;
+  }
+  a:hover, a:active, a:focus {
+    text-decoration: underline;
+  }
+  .menu {
+    list-style: none;
+    list-style-image: none;
+    margin: 0;
+    padding: 0;
+    .leaf {
+      margin: 8px 0;
+      list-style: none;
+      list-style-image: none;
+    }
+  }
+  h1,
+  h2,
+  h3 {
+    margin-top: 0;
+  }
+
+  &,
+  & .menu {
+    text-align: center;
+    @media #{$desk-only} {
+      text-align: left;
+    }
+  }
+}
+
+@media #{$desk-only} {
+  .l-region--colophon-first {
+    border-right: 1px solid $colophon-border-color;
+  }
+  .l-region--colophon-second,
+  .l-region--colophon-third {
+    padding-top: 2.6em;
+  }
+}

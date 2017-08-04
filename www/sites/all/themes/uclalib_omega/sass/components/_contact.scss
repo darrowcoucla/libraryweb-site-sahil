@@ -1,0 +1,103 @@
+.page-contact {
+  .pane-content > h2 {
+    color: $ucla-dark-gray;
+    font-size: 2.286em;
+    font-weight: 100;
+    margin-bottom: 2px;
+    @media #{$palm-lap-only} {
+      color: $ucla-blue;
+      font-size: 24px;
+      margin-top: 0;
+    }
+  }
+  .pane-title {
+    font-size: 1em;
+  }
+  .pane-horizontal-rule {
+    margin-bottom: 28px;
+    @media #{$palm-lap-only} {
+      display: none;
+    }
+  }
+  .pane-contact-question {
+    h2 {
+      margin-top: 8px;
+    }
+  }
+
+  .pane-ask-librarian,
+  .pane-bean-other-research-support-options {
+    margin-bottom: 47px;
+    h2 {
+      font-weight: bold;
+    }
+  }
+
+  /*Shift content on narrow screens to avoid overlapping iFrame*/
+  @media (max-width: 816px) {
+    .l-region--main-column .l-region--below-main-right {
+      clear: left;
+      float: left;
+    }
+  }
+
+  .pane-staff-search-pane {
+    margin-bottom: 2.7em;
+    h2 {
+      margin: 23px 0 6px;
+      @media #{$palm-lap-only} {
+        margin-top: 13px;
+      }
+    }
+    .header-search-form {
+      position: relative;
+      .form-item {
+        margin: 0;
+        width: 100%;
+        .form-text {
+          border: 1px solid #d9d9d9;
+          width: 100%;
+          @media #{$desk-only} {
+            height: 33px;
+          }
+        }
+      }
+      .form-actions {
+        margin: 0;
+        position: absolute;
+        right: 1px;
+        top: 1px;
+        .form-submit {
+          padding: 0.55em 0.6em 0.45em;
+          @media #{$palm-lap-only} {
+            padding: 0.85em 0.6em 0.55em;
+          }
+        }
+      }
+    }
+    p {
+      margin-top: 5px;
+    }
+  }
+
+  .pane-contact-location-list {
+    .more-link {
+      margin-bottom: 1.5em;
+      text-align: left;
+    }
+    & + .pane-todays-hours .view-content {
+      border: 1px solid $border-color;
+      padding: 2px;
+      & .views-field-title {
+        width: 60%;
+        & + .views-field {
+          text-align: center;
+          width: 40%;
+        }
+      }
+    }
+  }
+  .l-region--sidebar-right {
+    margin-top: 28px;
+  }
+}

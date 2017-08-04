@@ -1,0 +1,15 @@
+.pane-custom-breadcrumb {
+  margin-bottom: 18px;
+  p {
+    margin: 0;
+  }
+}
+
+.uclalib-nav-breadcrumb {
+  &, a {
+    color: $text-color;
+  }
+}
+.uclalib-nav-breadcrumb + h1 {
+  margin-top: 0;
+}

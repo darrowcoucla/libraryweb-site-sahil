@@ -1,0 +1,30 @@
+.pane-page-site-alert div.text {
+  border: none;
+  color: #58595B;
+  font-size: 18px;
+  line-height: 32px;
+  margin: 0 auto;
+  max-width: 1004px;
+  padding: .6em 20px;
+  padding: .6em 1.25rem;
+  text-align: center;
+}
+.pane-page-site-alert div.text:before {
+  content: "";
+  background-image: url("../../../images/icon-alert.png");
+  background-image: url("../../../images/icon-alert.svg"), none;
+  background-repeat: no-repeat;
+  width: 32px;
+  height: 32px;
+  display: inline-block;
+  vertical-align: middle;
+  margin-right: 5px;
+}
+.pane-page-site-alert div.low {
+  background: #fee4b1;
+}
+.pane-page-site-alert div.high {
+  background: #f1c9ca;
+}
+
+/*# sourceMappingURL=site-alert.css.map */

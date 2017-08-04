@@ -1,0 +1,20 @@
+.l-main-wrapper {
+  overflow: hidden;
+  .l-main {
+    background: #fff;
+    padding-bottom: 25px;
+  }
+}
+
+.l-region--main-column {
+  padding-top: 1em;
+}
+.l-region--below-main-right {
+  input[type=text],
+  input[type=email] {
+    width: 100%;
+  }
+  input#edit-captcha-response {
+    width: auto;
+  }
+}

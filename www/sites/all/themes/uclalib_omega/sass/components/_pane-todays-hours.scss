@@ -1,0 +1,45 @@
+.pane-todays-hours.pane-style-border-blue {
+  .pane-content {
+    padding: 3px;
+  }
+}
+
+.pane-todays-hours {
+  .views-table {
+    width: 100%;
+    border: none;
+    padding: 0;
+  }
+  thead {
+    display: none;
+  }
+
+  .views-row {
+    display: table;
+    width: 100%;
+  }
+  span.views-field {
+    display: table-cell;
+    vertical-align: middle;
+    padding: 7px 14px;
+    border-left: 3px solid white;
+  }
+  span.views-field:first-child {
+    border-left: 0;
+  }
+  .views-row-odd span.views-field {
+    background: $content-background-gray;
+  }
+  span.views-field-opening-hours-today {
+    text-align: right;
+  }
+  span.views-field-title {
+    width: 60%;
+  }
+  .field-content a {
+    font-weight: 400;
+  }
+  .views-field-title a {
+    @extend .more-link-triangle-after;
+  }
+}

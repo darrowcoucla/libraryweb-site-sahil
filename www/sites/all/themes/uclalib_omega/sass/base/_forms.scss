@@ -1,0 +1,11 @@
+input[type=submit],
+input[type=text] {
+  -webkit-border-radius: 0px;
+}
+.form-checkbox + label,
+.form-radio + label {
+  vertical-align: middle;
+}
+.form-required {
+  color: #a20000;
+}

@@ -1,0 +1,140 @@
+.l-region {
+  -moz-box-sizing: border-box;
+  -webkit-box-sizing: border-box;
+  box-sizing: border-box;
+}
+
+.panel-homepage {
+  position: relative;
+}
+.panel-homepage:after {
+  content: "";
+  display: table;
+  clear: both;
+}
+
+.homepage-top {
+  padding-top: 25px;
+}
+
+.homepage-top, .homepage-bottom {
+  clear: both;
+}
+
+.l-region--top-left-bottom-after {
+  margin-top: 25px;
+  clear: both;
+}
+
+.page-homepage.homepage .views-field-field-linklist-links .field-content ul {
+  padding: 0;
+  margin: 0;
+}
+.page-homepage.homepage .views-field-field-linklist-links .field-content ul li {
+  list-style-type: none;
+  padding-top: 5px;
+}
+
+.page-homepage.homepage .icon.icomoon.icon-clicc-computer, .page-homepage.homepage .icon.icomoon.icon-collaboration-pod, .page-homepage.homepage .icon.icomoon.icon-copy, .page-homepage.homepage .icon.icomoon.icon-more {
+  float: left;
+  padding-right: 5px;
+  font-size: 21px;
+  margin-top: -5px;
+}
+
+.no-bullets ul {
+  list-style: outside none none;
+  padding: 0;
+}
+.no-bullets ul li {
+  padding-bottom: 13px;
+}
+
+@media (min-width: 768px) {
+  /**
+   * Main columns and separators.
+   */
+  .homepage-top-left,
+  .l-region--bottom-left {
+    width: 68.75%;
+    float: left;
+    margin-right: -100%;
+    clear: none;
+    padding-left: 20px;
+    padding-right: 20px;
+    padding-left: 0;
+  }
+  .homepage-top-left:before,
+  .l-region--bottom-left:before {
+    content: " ";
+    display: block;
+    position: absolute;
+    z-index: -1;
+    top: 0;
+    left: 0%;
+    width: 68.75%;
+    bottom: 0;
+    background: "";
+  }
+
+  .homepage-top-right-sidebar,
+  .l-region--bottom-right {
+    width: 31.25%;
+    float: right;
+    margin-left: 0;
+    margin-right: 0;
+    clear: none;
+    padding-left: 20px;
+    padding-right: 20px;
+    padding-right: 0;
+  }
+  .homepage-top-right-sidebar:before,
+  .l-region--bottom-right:before {
+    content: " ";
+    display: block;
+    position: absolute;
+    z-index: -1;
+    top: 0;
+    left: 68.75%;
+    width: 31.25%;
+    bottom: 0;
+    background: "";
+  }
+}
+/**
+ * Embedded regions inside columns.
+ */
+@media (min-width: 481px) {
+  .homepage-top-left:after {
+    content: "";
+    display: table;
+    clear: both;
+  }
+
+  .l-region--top-left-bottom-left {
+    width: 50%;
+    float: left;
+    margin-right: -100%;
+    clear: none;
+    padding-left: 20px;
+    padding-right: 20px;
+    padding-left: 0;
+  }
+
+  .l-region--top-left-bottom-right {
+    width: 50%;
+    float: right;
+    margin-left: 0;
+    margin-right: 0;
+    clear: none;
+    padding-left: 20px;
+    padding-right: 20px;
+    padding-right: 0;
+  }
+
+  .page-homepage.homepage .icon.icomoon.icon-collaboration-pod {
+    margin-top: 0;
+  }
+}
+
+/*# sourceMappingURL=homepage.layout.css.map */

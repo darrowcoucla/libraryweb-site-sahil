@@ -1,0 +1,52 @@
+
+// Primary design colors
+$ucla-blue: #1e4b87;
+$ucla-lt-blue: #84b5d8;
+$ucla-sky-blue: #b5d1e6;
+$ucla-yellow: #fdb930;
+$ucla-accent_color: #ffe800;
+$ucla-dark-gray: #2d2f35;
+$ucla-gray: #d7d9da;
+$ucla-lt-gray: #eff3f4;
+
+// General content colors
+$link-color: $ucla-blue;
+$text-color: #666;
+$light-text-color: #666;
+$icon-color: #59595c;
+$border-color: #1e4b87;
+
+// Header section colors
+$header-bg-color: $ucla-blue;
+$header-text-color: black;
+$header-link-color: white;
+
+// Navigation section colors
+$nav-bg-color: #d7d9da;
+$nav-bg-active-color: $ucla-lt-gray;
+$nav-link-color: #333;
+$nav-link-hover-color: black;
+$nav-link-active-color: $ucla-blue;
+
+// Sidebar section colors
+$sidebar-bg-lt-blue: #c1daeb;
+
+// Main content section colors
+$content-background-blue: $ucla-sky-blue;
+$content-background-gray: $ucla-lt-gray;
+
+// Opening hours colors
+$opening-hours-mobile-border-color: #a7a7a7;
+$opening-hours-mobile-font-color: #767676;
+
+// Colophon section colors;
+$colophon-bg-color: #ececec;
+$colophon-text-color: $nav-link-color;
+$colophon-link-color: $ucla-blue;
+$colophon-border-color: #a2a2a2;
+
+// Footer section colors;
+$footer-bg-color: $ucla-blue;
+$footer-text-color: white;
+$footer-link-color: white;
+$footer-border-color: $border-color;

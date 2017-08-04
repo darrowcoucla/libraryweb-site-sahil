@@ -1,0 +1,6 @@
+name = RC-Res
+description = Main RC-Res Module
+package = RC-Res modules
+core = 7.x
+version = "7.x-1.1"
+files[] = rc_res.test

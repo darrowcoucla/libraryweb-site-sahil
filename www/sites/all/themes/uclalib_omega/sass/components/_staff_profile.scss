@@ -1,0 +1,168 @@
+// Responsive Staff Profile Overhaul
+
+// Resets & helpers
+.staff-profile {
+  h4 {
+    font-size: 16px;
+    line-height: 1.5;
+    margin-bottom: .3em;
+  }
+  .field-collection-container {
+    list-style-type: none;
+    margin: 0;
+    padding: 0;
+  }
+  .field--type-social-links {
+    .field__item {
+      display: inline-block;
+    }
+  }
+}
+
+// Profile fields
+.staff-profile__thumbnail {
+  clear: left;
+  margin: 10px 0 20px;
+  max-width: 340px;
+}
+
+.staff-profile__phone,
+.staff-profile__email {
+  clear: both;
+  margin: 20px 0;
+  overflow: hidden;
+  padding-left: 1.8em;
+  word-wrap: break-word;
+
+  [class^="icon-"] {
+    color: $ucla-dark-gray;
+    display: inline-block;
+    font-size: 1.1em;
+    text-align: center;
+    width: 1.5em;
+    display: inline-block;
+    float: left;
+    margin-left: -1.7em;
+  }
+}
+
+.staff-profile__location {
+  .field__item + .field__item {
+    padding-top: 8px;
+  }
+}
+
+.staff-profile__about--specialty-areas,
+.staff-profile__about--area-of-expertise,
+.staff-profile__departments {
+  .links {
+    margin: 0;
+    padding: 0 0 0 1.25em;
+  }
+  .links li + li {
+    padding-top: 8px;
+  }
+}
+
+.staff-profile__departments {
+  .links,
+  .links li {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+}
+
+.staff-profile__social-links {
+  li {
+    clear: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+}
+
+.staff-profile__librarian-name {
+  font-size: 27px;
+  line-height: 1;
+  font-weight: 400;
+}
+
+.staff-profile__librarian-title {
+  font-size: 17px;
+}
+
+.staff-profile__about {
+  @include clearfix;
+}
+
+// Columns
+@media #{$desk-only} {
+  .staff-profile__column-one {
+    float: left;
+    width: 28.5%;
+    clear: left;
+    margin-right: 1.5%
+  }
+  .staff-profile__column-two {
+    text-align: left;
+    float: left;
+    width: 68.5%;
+    margin-left: 1.5%
+  }
+}
+
+@media #{$lap-desk-only} {
+  .staff-profile__about--area-of-expertise {
+    float: left;
+    width: 47%;
+    margin: 0 1.5% 0 0;
+  }
+
+  .staff-profile__about--specialty-areas {
+    float: left;
+    width: 47%;
+    margin: 0 0 0 1.5%;
+  }
+}
+
+.staff-profile__bio {
+  p {
+    margin-top: 0;
+  }
+  ul li {
+    list-style-type: square;
+  }
+}
+
+.views-field-field-staff-last-name {
+  font-weight: 100;
+  padding-top: 15px;
+  font-size: 1.1em;
+}
+
+// collapsible menu
+span {
+  &#expandAll.links.links, &#collapseAll.links.links.links {
+    border: 1px solid;
+    cursor: pointer;
+    font-size: 10px;
+    margin-left: 15px;
+    padding: 0 5px;
+    text-transform: uppercase;
+  }
+}
+
+.node-type-staff-profile {
+  #header1.header,
+  #header2.header {
+    padding: 5px;
+    color: $ucla-blue;
+    font-size: 16px;
+    padding-left: 20px;
+  }
+
+  .pane-uclalib-nav .pane-content h2.pane-title a {
+    background: $ucla-blue;
+    color: #fff;
+  }
+}

@@ -1,0 +1,661 @@
+<?php
+/**
+ * @file
+ * Defines custom search form allowing user to choose from multiple search targets.
+ */
+
+/**
+ * Implements hook_block_info().
+ */
+function ucla_tab_search_block_info() {
+  $blocks['ucla_tab_search_tabs'] = array(
+    'info' => t('UCLA Tabbed Search Block'),
+  );
+  return $blocks;
+}
+
+/**
+ * Implements hook_block_view() to add the custom form to the new block
+ */
+function ucla_tab_search_block_view($delta = '') {
+  $block = array();
+  switch ($delta) {
+    case 'ucla_tab_search_tabs':
+      $block['title'] = 'UCLA Search';
+      $block['content'] = drupal_get_form('ucla_tab_search_tabs_form');
+      break;
+  }
+  return $block;
+}
+
+/**
+ * Form constructor for the tab'ed search.
+ *
+ * Notice a container element is used when we need to use #states form key.
+ * There seems to be a problem in drupal core when trying to use it directly
+ * from inside a vertical tab'ed form.
+ *
+ * @todo Maybe split on several forms, one per tab.
+ */
+function ucla_tab_search_tabs_form($form, &$form_state) {
+////////////////////////////////////////////////////////////////////////////////
+// set up tabs
+////////////////////////////////////////////////////////////////////////////////
+  $form['tabs'] = array(
+    '#type' => 'vertical_tabs',
+//    '#default_tab' => 'edit-books',
+  );
+  $fieldset_default = array(
+    '#type' => 'fieldset',
+    '#group' => 'tabs',
+    '#collapsible' => TRUE,
+    '#tree' => TRUE,
+  );
+  $search_button = array(
+    '#type' => 'submit',
+    '#value' => t('Search'),
+  );
+  $query_textfield = array(
+    '#type' => 'textfield',
+  );
+  // Overrides to include default and extra callback.
+  $form['#submit'] = array('ucla_tab_search_tabs_form_submit');
+
+  ////////////////////////////////////////////////////////////////////////////////
+  // Books & More tab.
+  // Books & More tab.
+  // Books & More tab.
+  $form['books'] = array(
+    '#title' => t('Books & More'),
+  ) + $fieldset_default;
+  $books_placeholder_label = 'Find books, journals and more.';
+  $form['books']['text_query'] = $query_textfield;
+  $form['books']['text_query']['#attributes'] = array(
+    'placeholder' => t($books_placeholder_label),
+  );
+  $form['books']['text_query']['#title'] = t($books_placeholder_label);
+  $form['books']['books_search'] = $search_button;
+  $form['books']['books_search']['#name'] = 'op_books';
+
+  $form['books']['text_query']['#title_display'] = 'invisible';
+
+  $form['books']['ucla_catalog_search_index'] = array(
+    '#type' => 'select',
+    '#options' => array(
+        'GKEY^*' => t('Keyword'),
+        'TKEY^' => t('Title'),
+        'TAL2' => t('Title - start of'),
+        'TKEY' => t('Title phrase'),
+        'JKEY^' => t('Journal title'),
+        'JAL2' => t('Journal title - start of'),
+        'SEKW' => t('Series title'),
+        'NAME@' => t('Author list'),
+        'NAME+' => t('Author List (last name, first name)'),
+        'AUTH@' => t('Author and title list'),
+        'SUBJ@' => t('Subject list'),
+        'SUBJ+' => t('Subject list - start of'),
+        'CALL+' => t('Call number'),
+        'ISBN' => t('ISBN'),
+        'ISSN' => t('ISSN'),
+    ),
+    '#states' => array(
+      'visible' => array(':input[name="books[catalog]"]' => array('value' => 'BM-CAT')),
+    ),
+    '#title' => t('Select search field'),
+    '#title_display' => 'invisible',
+  );
+
+  $form['books']['catalog'] = array(
+    '#type' => 'radios',
+    '#options' => array(
+        'BM-Mel' => t('Melvyl UC Catalog (+selected articles)'),
+        'BM-CAT' => t('UCLA Library Catalog'),
+    ),
+    '#default_value' => 'BM-Mel',
+  );
+
+  $form['books']['catalog_container_mel'] = array(
+    '#type' => 'container',
+    '#states' => array(
+      'visible' => array(':input[name="books[catalog]"]' => array('value' => 'BM-Mel')),
+    ),
+    '#attributes' => array(
+        'class' => array(
+          'pane-description',
+        ),
+    ),
+  );
+
+ $form['books']['catalog_container_mel']['description'] = array(
+    '#markup' => t('<div class="clearfix"></div><strong>What am I searching?</strong></br>
+<a href="http://ucla.worldcat.org/"target="_blank">Melvyl</a> provides information about articles, books, journals and other materials held by UCLA, other University of
+California (UC) campuses, and libraries worldwide. This search is limited to University of California Libraries, but
+can be changed via a pulldown search limit on the results screen. Many records contain links to full-text articles from
+<a href="http://ucla.worldcat.org/advancedsearch"target="_blank"> selected databases. </a>
+<p><p><a href="http://catalog.library.ucla.edu/vwebv/enterCourseReserve.do"target="_blank">Search Course Reserves</a>'),
+  );
+  $form['books']['catalog_container_cat'] = array(
+    '#type' => 'container',
+    '#states' => array(
+      'visible' => array(':input[name="books[catalog]"]' => array('value' => 'BM-CAT')),
+    ),
+    '#attributes' => array(
+        'class' => array(
+          'pane-description',
+        ),
+    ),
+  );
+
+    $form['books']['catalog_container_cat']['description'] = array(
+    '#markup' => t(
+      '<div class="clearfix"></div>
+       <strong>What am I searching?</strong></br>
+       <a href="http://catalog.library.ucla.edu"target="_blank">UCLA Library Catalog</a> provides information about the holdings of the UCLA Library, the Southern Regional Library Facility (SRLF), and specialized collections across campus. It includes journals, and periodicals by title, <strong>but it does not contain journal article titles or authors.</strong>
+       <p><p><a href="http://catalog.library.ucla.edu/vwebv/enterCourseReserve.do"target="_blank">Search Course Reserves</a>'),
+  );
+
+  ////////////////////////////////////////////////////////////////////////////////
+  // ArticlesPlus tab.
+  // ArticlesPlus tab.
+  // ArticlesPlus tab.
+  $form['articlesplus'] = array(
+    '#title' => t('ArticlesPlus'),
+  ) + $fieldset_default;
+  $articlesplus_placeholder_label = 'Search several databases at once.';
+  $form['articlesplus']['text_query'] = $query_textfield;
+  $form['articlesplus']['text_query']['#attributes'] = array(
+    'placeholder' => t($articlesplus_placeholder_label),
+  );
+  $form['articlesplus']['text_query']['#title'] = t($articlesplus_placeholder_label);
+  $form['articlesplus']['articlesplus_search'] = $search_button;
+  $form['articlesplus']['text_query']['#title_display'] = 'invisible';
+  $form['articlesplus']['peer_review'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Limit to peer-reviewed'),
+  );
+
+  $form['articlesplus']['articlesplus_search']['#name'] = 'op_articlesplus';
+
+  $form['articlesplus']['articlesplus_container_mel'] = array(
+    '#type' => 'container',
+    '#states' => array(
+      'visible' => array(':input[name="articleplus[catalog]"]' => array('value' => 'articleplus-Mel')),
+    ),
+    '#attributes' => array(
+      'class' => array(
+        'pane-description',
+      ),
+    ),
+  );
+
+  $form['articlesplus']['articlesplus_container_mel']['description'] = array(
+    '#markup' => t('
+      <div class="clearfix"></div>
+      <strong>What am I searching?</strong></br>
+      <a href="http://ucla.summon.serialssolutions.com/"target="_blank">ArticlesPlus</a> searches many millions of scholarly articles,
+      newspaper articles, e-books, government documents, and more. It combines hundreds of
+      online databases (like JSTOR and Web of Science) into a single search box. See more
+      <a href="/about-articlesplus">about ArticlesPlus</a>.</br>
+      </br>
+      <a href="http://ucla.summon.serialssolutions.com/advanced"target="_blank">Advanced Search</a></br>
+      <a href="/search">Where else can I search?</a>
+    '),
+  );
+
+  ////////////////////////////////////////////////////////////////////////////////
+  // Databases tab.
+  // Databases tab.
+  // Databases tab.
+  $form['databases'] = array(
+    '#title' => t('Databases'),
+  ) + $fieldset_default;
+  $databases_placeholder_label = 'Search for a database.';
+  $form['databases']['text_query'] = $query_textfield;
+  $form['databases']['text_query']['#attributes'] = array(
+    'placeholder' => t($databases_placeholder_label),
+  );
+  $form['databases']['text_query']['#title'] = t($databases_placeholder_label);
+  $form['databases']['text_query']['#title_display'] = 'invisible';
+
+  $form['databases']['sfx_search_index_container'] = array(
+    '#type' => 'container',
+    '#states' => array(
+      'visible' => array(':input[name="databases[databases_catalog]"]' => array('value' => 'ONE')),
+    ),
+  );
+  $form['databases']['ucla_tabbed_index_container'] = array(
+    '#type' => 'container',
+    '#states' => array(
+      'visible' => array(':input[name="databases[databases_catalog]"]' => array('value' => 'TWO')),
+    ),
+  );
+
+  $form['databases']['databases_search'] = $search_button;
+  $form['databases']['databases_search']['#name'] = 'op_databases';
+
+// begin  code for description text  - ccthompson
+
+    $form['databases']['databases_container_mel'] = array(
+        '#type' => 'container',
+        '#states' => array(
+            'visible' => array(':input[name="databases[catalog]"]' => array('value' => 'databases-Mel')),
+        ),
+        '#attributes' => array(
+            'class' => array(
+                'pane-description',
+            ),
+        ),
+    );
+
+    $form['databases']['databases_container_mel']['description'] = array(
+        '#markup' => t('
+      <div class="clearfix"></div>
+      <strong>What am I searching?</strong></br>Database titles and descriptions of what the database contains. The majority are licensed, subscription titles and will require a computer to be configured for <a href="use/computers-computing-services/connect-campus"target="_blank">off-campus access</a> if not being accessed from on campus. If you do not find the database you are seeking, try searching the <a href="http://catalog.library.ucla.edu"target="_blank">UCLA Library Catalog</a> or <a href="http://guides.library.ucla.edu"target="_blank">Research Guides</a>.<p>
+      <strong>Other Search Options</strong><br>
+      <a href="http://guides.library.ucla.edu/databases-by-subject"target="_blank">Find Databases by Subject</a></br>
+      <a href="http://guides.library.ucla.edu/az.php"target="_blank">A-Z List of Databases</a></br>
+          '),
+    );
+
+// end  code for description text  - ccthompson
+
+  ////////////////////////////////////////////////////////////////////////////////
+  // Journals tab.
+  // Journals tab.
+  // Journals tab.
+  $form['journals'] = array(
+    '#title' => t('Journals'),
+  ) + $fieldset_default;
+  $journals_placeholder_label = 'Search journal titles.';
+  $form['journals']['text_query'] = $query_textfield;
+  $form['journals']['text_query']['#attributes'] = array(
+    'placeholder' => t($journals_placeholder_label),
+  );
+
+  $form['journals']['text_query']['#title'] = t($journals_placeholder_label);
+  $form['journals']['journals_search'] = $search_button;
+  $form['journals']['journals_search']['#name'] = 'op_journals';
+  $form['journals']['text_query']['#title_display'] = 'invisible';
+  $form['journals']['catalog'] = array(
+    '#type' => 'radios',
+    '#options' => array(
+        'J-E' => t('UCelinks for e-journals'),
+        'J-ALL' => t('UCLA Library Catalog for print and e-journals'),
+    ),
+'#default_value' => 'J-E',
+  );
+  $form['journals']['sfx_search_index_container'] = array(
+    '#type' => 'container',
+    '#states' => array(
+      'visible' => array(':input[name="journals[catalog]"]' => array('value' => 'J-E')),
+    ),
+  );
+  $form['journals']['sfx_search_index_container']['sfx_search_index'] = array(
+    '#type' => 'select',
+    '#options' => array(
+        'within' => t('Contains'),
+        'starts' => t('Starts with'),
+        'exact' => t('Exact'),
+    ),
+    '#default_value' => 'starts',
+    '#title' => t('Select search modifier'),
+    '#title_display' => 'invisible',
+  );
+  $form['journals']['ucla_tabbed_index_container'] = array(
+    '#type' => 'container',
+    '#states' => array(
+      'visible' => array(':input[name="journals[catalog]"]' => array('value' => 'J-ALL')),
+    ),
+  );
+  $form['journals']['ucla_tabbed_index_container']['ucla_tabbed_index'] = array(
+    '#type' => 'select',
+    '#options' => array(
+        'JKEY^' => t('Contains'),
+        'JAL2' => t('Starts with'),
+    ),
+    '#default_value' => 'JKEY^',
+    '#title' => t('Select search modifier'),
+    '#title_display' => 'invisible',
+  );
+
+  $form['journals']['journals_container_mel'] = array(
+        '#type' => 'container',
+        '#states' => array(
+            'visible' => array(':input[name="journals[catalog]"]' => array('value' => 'J-E')),
+        ),
+        '#attributes' => array(
+            'class' => array(
+                'pane-description',
+            ),
+        ),
+    );
+
+  $form['journals']['journals_container_mel']['description'] = array(
+        '#markup' => t('
+      <div class="clearfix"></div>
+      <strong>What am I searching?</strong></br>The titles and abbreviations of journals subscribed to electronically by the UCLA Library and linked to article databases and Google Scholar.  To find journal articles by title and author, use <a href="http://ucelinks.cdlib.org:8888/sfx_local/cgi/core/citation-linker.cgi"target="_blank">Citation Linker</a>.<p>
+      <strong>Other Search Options</strong><br>
+      <a href="http://ucelinks.cdlib.org:8888/sfx_ucla/az/default?&param_sid_save=e21718f6c370481f02f52709928f7941&param_lang_save=eng&param_letter_group_save=A&param_perform_save=searchCategories&param_letter_group_script_save=Latin&param_chinese_checkbox_save=0&param_services2filter_save=getFullTxt&param_services2filter_save=getSelectedFullTxt&param_current_view_save=table&param_pattern_save=&param_jumpToPage_save=&param_type_save=browseLetterGroup&param_textSearchType_save=startsWith&&param_perform_value=searchTitle" target="_blank" title="A-Z e-Journal Titles Search-">A-Z e&#45;Journal Titles</a></br>
+      <a href="http://ucelinks.cdlib.org:8888/sfx_local/cgi/core/citation-linker.cgi"target="_blank">Locate the Article from Your Citation</a><br>
+      <a href="http://browzine.com/libraries/33/subjects"target="_blank">Browse Scholarly Journals with BrowZine</a>'),
+    );
+
+  ////////////////////////////////////////////////////////////////////////////////
+  // Research Guides tab.
+  // Research Guides tab.
+  // Research Guides tab.
+  $form['guides'] = array(
+    '#title' => t('Research Guides'),
+  ) + $fieldset_default;
+  $guides_placeholder_label = 'Search by subject or course (e.g., "Psychology" or "Engineering 183")';
+  $form['guides']['text_query'] = $query_textfield;
+  $form['guides']['text_query']['#attributes'] = array(
+    'placeholder' => t($guides_placeholder_label),
+  );
+  $form['guides']['text_query']['#title'] = t($guides_placeholder_label);
+  $form['guides']['text_query']['#title_display'] = 'invisible';
+  $form['guides']['guides_search'] = $search_button;
+  $form['guides']['guides_search']['#name'] = 'op_guides';
+    // begin  code for description text  - ccthompson
+
+    $form['guides']['guides_container_mel'] = array(
+        '#type' => 'container',
+        '#states' => array(
+            'visible' => array(':input[name="guides[catalog-journal]"]' => array('value' => 'guides-Mel')),
+        ),
+        '#attributes' => array(
+            'class' => array(
+                'pane-description',
+            ),
+        ),
+    );
+
+    $form['guides']['guides_container_mel']['description'] = array(
+        '#markup' => t('
+      <div class="clearfix"></div>
+	    <strong>What am I searching?</strong><br>
+	    Subject and course guides that compile useful databases, digital library collections, and research strategies.</p>
+	    Featured Research Guides:
+	    <ul>
+	      <li><a
+	      href="http://guides.library.ucla.edu/nursing"target="_blank">Nursing
+	      </a></li>
+	      <li><a href="http://guides.library.ucla.edu/film"target="_blank">Film and Television</a></li>
+	      <li><a href="http://guides.library.ucla.edu/maps"target="_blank">Maps, Atlases, Aerial Images, and Cartographic Resources</a></li>
+	      <li><a href="http://guides.library.ucla.edu/psychology"target="_blank">Psychology</a></li>
+	      <li><a href="http://guides.library.ucla.edu/citing"target="_blank">Citing Sources</a></li>
+	      <li><a href="http://guides.library.ucla.edu/start"target="_blank">Getting Started: Information Research Tips</a></li>
+	    </ul>
+	    <a href="http://guides.library.ucla.edu/"target="_blank">Browse All Research Guides</a>
+	'),
+    );
+
+// end  code for description text  - ccthompson
+
+////////////////////////////////////////////////////////////////////////////////
+  // oac's tab.
+  // oac's tab.
+  // oac's tab.
+  $form['oac'] = array(
+    '#title' => t('Archives & Manuscripts'),
+  ) + $fieldset_default;
+  $oac_placeholder_label = 'Search the OAC for a manuscript or archive.';
+  $form['oac']['text_query'] = $query_textfield;
+  $form['oac']['text_query']['#attributes'] = array(
+    'placeholder' => t($oac_placeholder_label),
+  );
+  $form['oac']['text_query']['#title'] = t($oac_placeholder_label);
+  $form['oac']['text_query']['#title_display'] = 'invisible';
+  $form['oac']['oac_search'] = $search_button;
+  $form['oac']['oac_search']['#name'] = 'op_oac';
+
+    // begin  code for description text  - ccthompson
+
+    $form['oac']['oac_container_mel'] = array(
+        '#type' => 'container',
+        '#states' => array(
+            'visible' => array(':input[name="oac[catalog]"]' => array('value' => 'oac-Mel')),
+        ),
+        '#attributes' => array(
+            'class' => array(
+                'pane-description',
+            ),
+        ),
+    );
+
+    $form['oac']['oac_container_mel']['description'] = array(
+        '#markup' => t('
+      <div class="clearfix"></div>
+       <strong>What am I searching?</strong></br>The <a
+       href="http://www.oac.cdlib.org/"target="_blank">Online Archive of
+       California (OAC)</a> is a Web-accessible, digital gateway to
+       information
+       about materials such as manuscripts, photographs, and works of art held in libraries, museums, archives, and other institutions across California, including UCLA. The OAC allows patrons to view finding aids, i.e., inventories of collection content, which provide detailed information about collection content that is readily accessible and searchable.'),
+    );
+
+// end  code for description text  - ccthompson
+
+  // pass vertical tab id(s) to javascript for hash-landers
+  $ids = array();
+  foreach($form as $key => $element) {
+    if (substr($key, 0, 1) != '#') {
+      $ids[] = $key;
+    }
+  }
+  $form['tabs']['#attached']['js'] = array(
+    array(
+      'data' => array('ucla_tab_search' => array('ids' => $ids)),
+      'type' => 'setting'
+    ),
+    array(
+      'data' => drupal_get_path('module', 'ucla_tab_search') . '/ucla_tab_search.js'
+    )
+  );
+
+  return $form;
+}
+
+/** ***********************************************************************************************************************
+ * Form submission handler for ucla_tab_search_form().
+ *
+ * This is mainly about mapping values preparing them to the othe submit
+ * handler.
+ * Notice form_id is renamed to ucla_form_id in order to avoid collision with
+ * Drupal core forms form_id also provided automatically.
+ */
+function ucla_tab_search_tabs_form_submit($form, &$form_state) {
+  module_load_include('inc', 'ucla_search', 'includes/ucla_search_logger');
+  module_load_include('inc', 'ucla_search', 'includes/ucla_search_handlers');
+  $search_date = $_SERVER['REQUEST_TIME'];
+  $browser_ip = (isset($_SERVER['HTTP_X_FORWARDED_FOR']) ? $_SERVER['HTTP_X_FORWARDED_FOR'] : $_SERVER['REMOTE_ADDR']);
+
+  // 2016-02-24 akohler: Not sure of the purpose of this array, other than to provide op_$tab names for the switch below...
+  $tab_form_id_map = array(
+    'books' => array('BM-CAT' => 'BM-CAT', 'BM-Mel' => 'BM-Mel'),
+    // 2016-02-24 akohler: Added simplest possible array for ArticlesPlus tab
+    'articlesplus' => array('AP' => 'AP'),
+    'journals' => array('J-ALL' => 'J-ALL', 'J-E' => 'J-E'),
+    'databases' => array('within' => 'within', 'starts' => 'starts'),
+    'guides' => array('within' => 'within', 'starts' => 'starts'),
+    'oac' => array('within' => 'within', 'starts' => 'starts'),
+  );
+
+  // Get current tab, according to the form.  However, this can be wrong
+  // if the tab was accessed via url#hash, instead of by clicking, so this
+  // value will be further checked against submitted form data.
+  $form_tab = $form_state['values']['tabs__active_tab'];
+
+  // Initialize other values used for tab checking.
+  $query_tab = "";
+  $query_tab_count = 0;
+  $tab_key = "";
+
+  // Iterate through tab form data to determine which set of inputs to use.
+  foreach ($tab_form_id_map as $tab => $maps) {
+    // A submitted text_query field helps indicate which tab/form to use.
+    if (empty($form_state['values'][$tab]['text_query'])) {
+      // Not this tab.
+      continue;
+    }
+    else {
+      // Save current array key for later use outside this loop
+      $tab_key = $tab;
+      $query_tab = "edit-$tab";
+      $query_tab_count++;
+      // If match, this is the correct tab, no need to check further.
+      if ($form_tab == $query_tab) {
+	$real_form_tab = $query_tab;
+        break;
+      }
+    }
+  }
+  // If, after going through all tab form data, we don't have a match but
+  // do have query data, use the tab for the query data, not the alleged form tab.
+  if ($query_tab_count == 1 && $form_tab != $query_tab) {
+    $real_form_tab = $query_tab;
+    $tab_key = str_replace("edit-", "", $query_tab);
+  }
+
+  $maps = $tab_form_id_map[$tab_key];
+
+  if (is_array($maps)) {
+    switch ($real_form_tab) {
+
+        case 'edit-books':
+          $form_state['values']['ucla_form_id'] = $maps[$form_state['values']['books']['catalog']];
+	    switch ( $maps[$form_state['values']['books']['catalog']] ) {
+	      case 'BM-Mel':
+		// Put form info into array expected by search logger / handlers
+		$search_info = array (
+		'search_target' => 'melvyl',
+		'search_terms' => $form_state['values']['books']['text_query'],
+		'search_date' => $search_date,
+		'browser_ip' => $browser_ip,
+		'search_form' => $maps[$form_state['values']['books']['catalog']],
+		);
+		break;
+	      case 'BM-CAT':
+		// Put form info into array expected by search logger / handlers
+		$search_info = array (
+		'search_target' => 'catalog',
+		'search_terms' => $form_state['values']['books']['text_query'],
+		'search_code' => $form_state['values']['books']['ucla_catalog_search_index'],
+		'search_date' => $search_date,
+		'browser_ip' => $browser_ip,
+		'search_form' => $maps[$form_state['values']['books']['catalog']],
+		);
+		break;
+	    }
+	break;
+
+        case 'edit-databases':
+          $search_info = array (
+	    'search_target' => 'database',
+	    'search_type' => 'contains',
+	    'search_terms' => $form_state['values']['databases']['text_query'],
+	    'search_date' => $search_date,
+	    'browser_ip' => $browser_ip,
+            'search_form' => 'DB',
+          );
+        break;
+
+        case 'edit-journals':
+	  // 2014-09-27 akohler: I have no idea why ucla_form_id is important here but not on all tabs.
+	  // Workaround for OP-439 (undefined index notices): use isset().
+	  if (isset($maps[$form_state['values']['journals']['catalog']])) {
+            $form_state['values']['ucla_form_id'] = $maps[$form_state['values']['journals']['catalog']];
+	  }
+	    switch ( $form_state['values']['journals']['catalog'] ) {
+	      case 'J-ALL':
+		$search_info = array (
+		'search_target' => 'catalog',
+		'search_terms' => $form_state['values']['journals']['text_query'],
+		'search_code' => $form_state['values']['journals']['ucla_tabbed_index_container']['ucla_tabbed_index'],
+		'search_date' => $search_date,
+		'browser_ip' => $browser_ip,
+		'search_form' => 'J-ALL',
+		);
+	      break;
+	      case 'J-E':
+		$search_info = array (
+		'search_target' => 'sfx',
+		'search_terms' => $form_state['values']['journals']['text_query'],
+		'search_type' => $form_state['values']['journals']['sfx_search_index_container']['sfx_search_index'],
+		'search_date' => $search_date,
+		'browser_ip' => $browser_ip,
+		'search_form' => 'J-E',
+		);
+	      break;
+	    }
+        break;
+
+        case 'edit-guides':
+	  // Put form info into array expected by search logger / handlers
+	  $search_info = array (
+	  'search_target' => 'guides',
+	  'search_terms' => $form_state['values']['guides']['text_query'],
+	  'search_date' => $search_date,
+	  'browser_ip' => $browser_ip,
+	  'search_form' => 'RG',
+	  );
+	break;
+
+        case 'edit-oac':
+	  // Put form info into array expected by search logger / handlers
+	  $search_info = array (
+	  'search_target' => 'oac',
+	  'search_terms' => $form_state['values']['oac']['text_query'],
+	  'search_date' => $search_date,
+	  'browser_ip' => $browser_ip,
+	  'search_form' => 'MA',
+	  );
+	break;
+
+        case 'edit-articlesplus':
+	  // Put form info into array expected by search logger / handlers
+	  $search_info = array (
+	  'search_target' => 'articlesplus',
+	  'search_terms' => $form_state['values']['articlesplus']['text_query'],
+	  'search_date' => $search_date,
+	  'browser_ip' => $browser_ip,
+	  'search_form' => 'AP',
+	  );
+	  // Add optional limit
+	  if ($form_state['values']['articlesplus']['peer_review'] == 1) {
+	    $search_info['search_limit'] = 'IsScholarly,true,f';
+	  }
+	break;
+
+        default:
+          // Not recognized.
+	  $search_info = array (
+	  'search_target' => 'error',
+	  'search_terms' => 'BAD SEARCH - COULD NOT ID TAB',
+	  'search_date' => $search_date,
+	  'browser_ip' => $browser_ip,
+	  'search_form' => 'UNKNOWN',
+	  );
+        break;
+      }
+
+    // Log the search info before doing the search
+    ucla_search_log_search($search_info);
+    // Send search info to router, which will do the actual search
+    ucla_search_route_search($search_info);
+    }
+    else {
+      $form_state['values']['ucla_form_id'] = $maps;
+    } // end of very long if(is_array($maps))
+}
+
+/**
+ * Implements hook_theme().
+ */
+function ucla_tab_search_theme($existing, $type, $theme, $path) {
+  return array(
+    'articleplus_container_mel_description' => array(
+      'render element' => 'element',
+      'template' => 'articleplus_container_mel_description'
+    )
+  );
+}

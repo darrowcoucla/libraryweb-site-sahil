@@ -1,0 +1,38 @@
+.l-region--top {
+  .panel-pane {
+    margin: 24px 0;
+  }
+}
+
+@media #{$desk-only} {
+  .l-region--top {
+    background: $content-background-gray;
+    margin: 0;
+    padding: 0;
+    position: relative;
+    float: left;
+    width: 100%;
+    @include clearfix;
+  }
+
+  // Extend background color into the gutters.
+  .l-region--top:before,
+  .l-region--top:after {
+    content: " ";
+    display: block;
+    position: absolute;
+    top: 0;
+    width: 20px; // Fallback for browsers that dont support rems.
+    width: 1.25rem;
+    height: 100%;
+    background: $content-background-gray;
+  }
+
+  .l-region--top:before {
+    right: 100%;
+  }
+
+  .l-region--top:after {
+    left: 100%;
+  }
+}

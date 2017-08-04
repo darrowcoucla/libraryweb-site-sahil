@@ -1,0 +1,50 @@
+<?php
+/**
+ * @file
+ * Code for the UCLALIB Destination feature.
+ */
+
+include_once 'uclalib_destination.features.inc';
+
+/**
+ * Implements hook_ctools_plugin_directory().
+ */
+function uclalib_destination_ctools_plugin_directory($owner, $plugin_type) {
+  switch ("$owner:$plugin_type") {
+    case 'ctools:content_types':
+      return "plugins/$owner/$plugin_type";
+  }
+
+  return NULL;
+}
+
+/**
+ * @param $node
+ * @param $fields
+ * @return array
+ */
+function uclalib_destination_fetch_facilities_tids($node, $fields) {
+  $tids = array();
+
+  foreach ($fields as $field_name) {
+    if (isset($node->{$field_name}[LANGUAGE_NONE]) && !empty($node->{$field_name}[LANGUAGE_NONE])) {
+      foreach ($node->{$field_name}[LANGUAGE_NONE] as $value) {
+        if (isset($value['tid'])) {
+          $tids[] = $value['tid'];
+        }
+      }
+    }
+  }
+
+  return $tids;
+}
+
+/**
+ * Implements hook_form_FORMID_alter.
+ *
+ * Hide building name on destination node form since it is inherited from the
+ * parent location.
+ */
+function uclalib_destination_form_destination_node_form_alter(&$form, &$form_state) {
+  $form['field_location_building']['#access'] = FALSE;
+}
